@@ -41,12 +41,12 @@ class ActorCriticMetaLearner(object):
         self.tau = tau
         self.to(device)
 
-    def inner_loss(self, episodes, params=None):
+    def inner_loss(self, episodes, params=None, critic_params=None):
         """Compute the inner loss for the one-step gradient update. The inner
         loss is REINFORCE with baseline [2], computed on advantages estimated
         with Generalized Advantage Estimation (GAE, [3]).
         """
-        values = self.critic(episodes.observations)
+        values = self.critic(episodes.observations, params=critic_params)
         advantages = episodes.gae(values, tau=self.tau) - values.squeeze()
         advantages = weighted_normalize(advantages, weights=episodes.mask)
 
@@ -75,7 +75,7 @@ class ActorCriticMetaLearner(object):
         critic_loss = self.inner_critic_loss(episodes)
         critic_params = self.critic.update_params(critic_loss, step_size=self.fast_lr,
                                                   first_order=first_order)
-        loss = self.inner_loss(episodes)
+        loss = self.inner_loss(episodes, critic_params=critic_params)
         # Get the new parameters after a one-step gradient update
         params = self.policy.update_params(loss, step_size=self.fast_lr,
                                            first_order=first_order)
