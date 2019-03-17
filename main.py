@@ -13,7 +13,9 @@ from maml_rl.baseline import LinearFeatureBaseline
 from maml_rl.policies.critic import Critic
 from maml_rl.sampler import BatchSampler
 
-from tensorboardX import SummaryWriter
+import wandb
+wandb.init()
+wandb.init(project="meta-rl", tags=['actor-critic'])
 
 def total_rewards(episodes_rewards, aggregation=torch.mean):
     rewards = torch.mean(torch.stack([aggregation(torch.sum(rewards, dim=0))
@@ -25,7 +27,6 @@ def main(args):
         'AntPos-v0', 'HalfCheetahVel-v1', 'HalfCheetahDir-v1',
         '2DNavigation-v0'])
 
-    writer = SummaryWriter('./logs/{0}'.format(args.output_folder))
     save_folder = './saves/{0}'.format(args.output_folder)
     if not os.path.exists(save_folder):
         os.makedirs(save_folder)
@@ -57,23 +58,17 @@ def main(args):
         fast_lr=args.fast_lr, tau=args.tau, device=args.device)
 
     for batch in range(args.num_batches):
-        start = time.time()
         tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
-        print('Sampling tasks took {} seconds'.format(time.time()-start))
-        start = time.time()
         episodes = metalearner.sample(tasks, first_order=args.first_order)
-        print('Sampling episodes took {} seconds'.format(time.time() - start))
-        start = time.time()
         metalearner.step(episodes, max_kl=args.max_kl, cg_iters=args.cg_iters,
             cg_damping=args.cg_damping, ls_max_steps=args.ls_max_steps,
             ls_backtrack_ratio=args.ls_backtrack_ratio)
-        print('Step took {} seconds'.format(time.time() - start))
 
-        # Tensorboard
-        writer.add_scalar('total_rewards/before_update',
-            total_rewards([ep.rewards for ep, _ in episodes]), batch)
-        writer.add_scalar('total_rewards/after_update',
-            total_rewards([ep.rewards for _, ep in episodes]), batch)
+        # Logging
+        wandb.log({'total_rewards/before_update':
+                          total_rewards([ep.rewards for ep, _ in episodes])}, step=batch)
+        wandb.log({'total_rewards/after_update':
+                       total_rewards([ep.rewards for _, ep in episodes])}, step=batch)
 
         # Save policy network
         with open(os.path.join(save_folder,
