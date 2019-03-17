@@ -79,7 +79,7 @@ class BatchEpisodes(object):
     def gae(self, values, tau=1.0):
         # Add an additional 0 at the end of values for
         # the estimation at the end of the episode
-        values = values.squeeze(2).detach()
+        values = values.squeeze(2)
         values = F.pad(values * self.mask, (0, 0, 0, 1))
 
         deltas = self.rewards + self.gamma * values[1:] - values[:-1]

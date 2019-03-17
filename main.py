@@ -1,12 +1,16 @@
+import time
+
 import maml_rl.envs
 import gym
 import numpy as np
 import torch
 import json
 
+from maml_rl.actor_critic_metalearner import ActorCriticMetaLearner
 from maml_rl.metalearner import MetaLearner
 from maml_rl.policies import CategoricalMLPPolicy, NormalMLPPolicy
 from maml_rl.baseline import LinearFeatureBaseline
+from maml_rl.policies.critic import Critic
 from maml_rl.sampler import BatchSampler
 
 from tensorboardX import SummaryWriter
@@ -44,16 +48,26 @@ def main(args):
             hidden_sizes=(args.hidden_size,) * args.num_layers)
     baseline = LinearFeatureBaseline(
         int(np.prod(sampler.envs.observation_space.shape)))
+    critic = Critic(
+        int(np.prod(sampler.envs.observation_space.shape)),
+        1,
+        hidden_sizes=(args.hidden_size,) * args.num_layers)
 
-    metalearner = MetaLearner(sampler, policy, baseline, gamma=args.gamma,
+    metalearner = ActorCriticMetaLearner(sampler, policy, critic, gamma=args.gamma,
         fast_lr=args.fast_lr, tau=args.tau, device=args.device)
 
     for batch in range(args.num_batches):
+        start = time.time()
         tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
+        print('Sampling tasks took {} seconds'.format(time.time()-start))
+        start = time.time()
         episodes = metalearner.sample(tasks, first_order=args.first_order)
+        print('Sampling episodes took {} seconds'.format(time.time() - start))
+        start = time.time()
         metalearner.step(episodes, max_kl=args.max_kl, cg_iters=args.cg_iters,
             cg_damping=args.cg_damping, ls_max_steps=args.ls_max_steps,
             ls_backtrack_ratio=args.ls_backtrack_ratio)
+        print('Step took {} seconds'.format(time.time() - start))
 
         # Tensorboard
         writer.add_scalar('total_rewards/before_update',
