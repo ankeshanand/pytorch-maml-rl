@@ -15,7 +15,7 @@ from maml_rl.sampler import BatchSampler
 
 import wandb
 wandb.init()
-wandb.init(project="meta-rl", tags=['actor-critic'])
+wandb.init(project="pytorch-maml-rl", tags=['actor-critic'])
 
 def total_rewards(episodes_rewards, aggregation=torch.mean):
     rewards = torch.mean(torch.stack([aggregation(torch.sum(rewards, dim=0))
