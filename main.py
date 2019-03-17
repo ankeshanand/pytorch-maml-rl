@@ -14,7 +14,6 @@ from maml_rl.policies.critic import Critic
 from maml_rl.sampler import BatchSampler
 
 import wandb
-wandb.init()
 wandb.init(project="pytorch-maml-rl", tags=['actor-critic'])
 
 def total_rewards(episodes_rewards, aggregation=torch.mean):
