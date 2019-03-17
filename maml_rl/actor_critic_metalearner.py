@@ -196,13 +196,6 @@ class ActorCriticMetaLearner(object):
         """Meta-optimization step (ie. update of the initial parameters), based
         on Trust Region Policy Optimization (TRPO, [4]).
         """
-        old_critic_loss, old_values = self.critic_loss(episodes)
-        grads = torch.autograd.grad(old_critic_loss, self.critic.parameters())
-        grads = parameters_to_vector(grads)
-        old_critic_params = parameters_to_vector(self.critic.parameters())
-        vector_to_parameters(old_critic_params - (0.001 * grads),
-                             self.critic.parameters())
-
         old_loss, _, old_pis = self.surrogate_loss(episodes)
         grads = torch.autograd.grad(old_loss, self.policy.parameters())
         grads = parameters_to_vector(grads)
@@ -234,6 +227,13 @@ class ActorCriticMetaLearner(object):
             step_size *= ls_backtrack_ratio
         else:
             vector_to_parameters(old_params, self.policy.parameters())
+
+        old_critic_loss, old_values = self.critic_loss(episodes)
+        grads = torch.autograd.grad(old_critic_loss, self.critic.parameters())
+        grads = parameters_to_vector(grads)
+        old_critic_params = parameters_to_vector(self.critic.parameters())
+        vector_to_parameters(old_critic_params - (0.001 * grads),
+                             self.critic.parameters())
 
     def to(self, device, **kwargs):
         self.policy.to(device, **kwargs)
