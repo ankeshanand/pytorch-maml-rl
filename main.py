@@ -143,4 +143,5 @@ if __name__ == '__main__':
     if 'SLURM_JOB_ID' in os.environ:
         args.output_folder += '-{0}'.format(os.environ['SLURM_JOB_ID'])
 
+    wandb.config.update(args)
     main(args)
