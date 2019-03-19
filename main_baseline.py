@@ -35,7 +35,7 @@ def main(args):
         config.update(device=args.device.type)
         json.dump(config, f, indent=2)
 
-    sampler = BatchSampler(args.env_name, batch_size=args.fast_batch_size,
+    sampler = BatchSampler(args.env_name, args.seed, batch_size=args.fast_batch_size,
         num_workers=args.num_workers)
     if continuous_actions:
         policy = NormalMLPPolicy(
