@@ -34,7 +34,7 @@ def main(args):
         config.update(device=args.device.type)
         json.dump(config, f, indent=2)
 
-    sampler = BatchSampler(args.env_name, batch_size=args.fast_batch_size,
+    sampler = BatchSampler(args.env_name, args.seed, batch_size=args.fast_batch_size,
         num_workers=args.num_workers)
     if continuous_actions:
         policy = NormalMLPPolicy(
@@ -128,6 +128,8 @@ if __name__ == '__main__':
         help='number of workers for trajectories sampling')
     parser.add_argument('--device', type=str, default='cpu',
         help='set the device (cpu or cuda)')
+    parser.add_argument('--seed', type=int, default=42,
+                        help='Random Seed')
 
     args = parser.parse_args()
 
@@ -142,5 +144,6 @@ if __name__ == '__main__':
     # Slurm
     if 'SLURM_JOB_ID' in os.environ:
         args.output_folder += '-{0}'.format(os.environ['SLURM_JOB_ID'])
-
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
     main(args)
