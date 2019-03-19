@@ -22,6 +22,7 @@ def total_rewards(episodes_rewards, aggregation=torch.mean):
     return rewards.item()
 
 def main(args):
+    wandb.config.update({k: v for k, v in vars(args).items() if k in ['env_name', 'tau']})
     continuous_actions = (args.env_name in ['AntVel-v1', 'AntDir-v1',
         'AntPos-v0', 'HalfCheetahVel-v1', 'HalfCheetahDir-v1',
         '2DNavigation-v0'])
@@ -128,6 +129,8 @@ if __name__ == '__main__':
         help='number of workers for trajectories sampling')
     parser.add_argument('--device', type=str, default='cpu',
         help='set the device (cpu or cuda)')
+    parser.add_argument('--seed', type=int, default=42,
+                        help='Random Seed')
 
     args = parser.parse_args()
 
@@ -142,5 +145,6 @@ if __name__ == '__main__':
     # Slurm
     if 'SLURM_JOB_ID' in os.environ:
         args.output_folder += '-{0}'.format(os.environ['SLURM_JOB_ID'])
-
+    torch.manual_seed(args.seed)
+    torch.cuda.manual_seed_all(args.seed)
     main(args)
