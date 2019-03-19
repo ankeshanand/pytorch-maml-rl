@@ -223,7 +223,7 @@ class ActorCriticMetaLearner(object):
         for _ in range(ls_max_steps):
             vector_to_parameters(old_params - step_size * step,
                                  self.policy.parameters())
-            loss, kl, _ = self.surrogate_loss(episodes, old_pis=old_pis)
+            loss, kl, critic_losses, _ = self.surrogate_loss(episodes, old_pis=old_pis)
             improve = loss - old_loss
             if (improve.item() < 0.0) and (kl.item() < max_kl):
                 break
