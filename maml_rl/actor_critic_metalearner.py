@@ -231,11 +231,9 @@ class ActorCriticMetaLearner(object):
         else:
             vector_to_parameters(old_params, self.policy.parameters())
 
-        grads = torch.autograd.grad(critic_loss, self.critic.parameters())
-        grads = parameters_to_vector(grads)
-        old_critic_params = parameters_to_vector(self.critic.parameters())
-        vector_to_parameters(old_critic_params - (0.001 * grads),
-                             self.critic.parameters())
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
 
     def to(self, device, **kwargs):
         self.policy.to(device, **kwargs)
