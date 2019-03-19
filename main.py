@@ -22,7 +22,7 @@ def total_rewards(episodes_rewards, aggregation=torch.mean):
     return rewards.item()
 
 def main(args):
-    wandb.config.update(args)
+    wandb.config.update({k: v for k, v in args.items() if k in ['env_name', 'tau']})
     continuous_actions = (args.env_name in ['AntVel-v1', 'AntDir-v1',
         'AntPos-v0', 'HalfCheetahVel-v1', 'HalfCheetahDir-v1',
         '2DNavigation-v0'])
