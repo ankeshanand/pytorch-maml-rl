@@ -137,7 +137,7 @@ class ActorCriticMetaLearner(object):
         return _product
 
     def surrogate_loss(self, episodes, old_pis=None):
-        losses, kls, action_dists = [], [], []
+        losses, kls, action_dists, critic_losses = [], [], [], []
         if old_pis is None:
             old_pis = [None] * len(episodes)
 
@@ -154,6 +154,7 @@ class ActorCriticMetaLearner(object):
                 advantages = valid_episodes.gae(values, tau=self.tau)
                 advantages = weighted_normalize(advantages,
                                                 weights=valid_episodes.mask)
+                critic_losses.append(advantages)
 
                 log_ratio = (action_dist.log_prob(valid_episodes.actions)
                              - old_pi.log_prob(valid_episodes.actions))
@@ -173,7 +174,9 @@ class ActorCriticMetaLearner(object):
                 kls.append(kl)
 
         return (torch.mean(torch.stack(losses, dim=0)),
-                torch.mean(torch.stack(kls, dim=0)), action_dists)
+                torch.mean(torch.stack(kls, dim=0)),
+                torch.mean(torch.stack(critic_losses, dim=0)),
+                action_dists)
 
     def critic_loss(self, episodes, old_values=None):
         losses, values = [], []
@@ -196,14 +199,7 @@ class ActorCriticMetaLearner(object):
         """Meta-optimization step (ie. update of the initial parameters), based
         on Trust Region Policy Optimization (TRPO, [4]).
         """
-        old_critic_loss, old_values = self.critic_loss(episodes)
-        grads = torch.autograd.grad(old_critic_loss, self.critic.parameters())
-        grads = parameters_to_vector(grads)
-        old_critic_params = parameters_to_vector(self.critic.parameters())
-        vector_to_parameters(old_critic_params - (0.001 * grads),
-                             self.critic.parameters())
-
-        old_loss, _, old_pis = self.surrogate_loss(episodes)
+        old_loss, _, critic_losses, old_pis = self.surrogate_loss(episodes)
         grads = torch.autograd.grad(old_loss, self.policy.parameters())
         grads = parameters_to_vector(grads)
 
@@ -234,6 +230,12 @@ class ActorCriticMetaLearner(object):
             step_size *= ls_backtrack_ratio
         else:
             vector_to_parameters(old_params, self.policy.parameters())
+
+        grads = torch.autograd.grad(critic_losses, self.critic.parameters())
+        grads = parameters_to_vector(grads)
+        old_critic_params = parameters_to_vector(self.critic.parameters())
+        vector_to_parameters(old_critic_params - (0.001 * grads),
+                             self.critic.parameters())
 
     def to(self, device, **kwargs):
         self.policy.to(device, **kwargs)
