@@ -70,7 +70,7 @@ def main(args):
                           total_rewards([ep.rewards for ep, _ in episodes])}, step=batch)
         wandb.log({'total_rewards/after_update':
                        total_rewards([ep.rewards for _, ep in episodes])}, step=batch)
-        wandb.log({'meta critic loss': meta_critic_loss}, step=batch)
+        wandb.log({'meta critic loss': meta_critic_loss.detach().item()}, step=batch)
 
         # Save policy network
         with open(os.path.join(save_folder,
