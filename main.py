@@ -22,7 +22,7 @@ def total_rewards(episodes_rewards, aggregation=torch.mean):
     return rewards.item()
 
 def main(args):
-    wandb.config.update({k: v for k, v in vars(args).items() if k in ['env_name', 'tau']})
+    wandb.config.update({k: v for k, v in vars(args).items() if k in ['env_name', 'tau', 'critic_lr']})
     continuous_actions = (args.env_name in ['AntVel-v1', 'AntDir-v1',
         'AntPos-v0', 'HalfCheetahVel-v1', 'HalfCheetahDir-v1',
         '2DNavigation-v0'])
@@ -121,6 +121,8 @@ if __name__ == '__main__':
         help='maximum number of iterations for line search')
     parser.add_argument('--ls-backtrack-ratio', type=float, default=0.8,
         help='maximum number of iterations for line search')
+    parser.add_argument('--critic-lr', type=float, default=1e-3,
+                        help='Critic Learning Rate')
 
     # Miscellaneous
     parser.add_argument('--output-folder', type=str, default='maml',
