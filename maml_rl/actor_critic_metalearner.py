@@ -183,9 +183,6 @@ class ActorCriticMetaLearner(object):
         on Trust Region Policy Optimization (TRPO, [4]).
         """
         old_loss, _, old_pis, critic_loss = self.surrogate_loss(episodes)
-        self.critic_optimizer.zero_grad()
-        critic_loss.backward()
-        self.critic_optimizer.step()
         grads = torch.autograd.grad(old_loss, self.policy.parameters())
         grads = parameters_to_vector(grads)
 
@@ -216,6 +213,10 @@ class ActorCriticMetaLearner(object):
             step_size *= ls_backtrack_ratio
         else:
             vector_to_parameters(old_params, self.policy.parameters())
+
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
 
         return critic_loss
 
