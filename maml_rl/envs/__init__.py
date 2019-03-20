@@ -27,21 +27,21 @@ register(
     'AntVel-v1',
     entry_point='maml_rl.envs.utils:mujoco_wrapper',
     kwargs={'entry_point': 'maml_rl.envs.mujoco.ant:AntVelEnv'},
-    max_episode_steps=100
+    max_episode_steps=200
 )
 
 register(
     'AntDir-v1',
     entry_point='maml_rl.envs.utils:mujoco_wrapper',
     kwargs={'entry_point': 'maml_rl.envs.mujoco.ant:AntDirEnv'},
-    max_episode_steps=100
+    max_episode_steps=200
 )
 
 register(
     'AntPos-v0',
     entry_point='maml_rl.envs.utils:mujoco_wrapper',
     kwargs={'entry_point': 'maml_rl.envs.mujoco.ant:AntPosEnv'},
-    max_episode_steps=100
+    max_episode_steps=200
 )
 
 register(
