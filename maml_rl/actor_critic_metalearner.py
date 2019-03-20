@@ -163,7 +163,7 @@ class ActorCriticMetaLearner(object):
                     log_ratio = torch.sum(log_ratio, dim=2)
                 ratio = torch.exp(log_ratio)
 
-                loss = -weighted_mean(ratio * advantages, dim=0,
+                loss = -weighted_mean(ratio * advantages.detach(), dim=0,
                                       weights=valid_episodes.mask)
                 losses.append(loss)
 
@@ -178,22 +178,6 @@ class ActorCriticMetaLearner(object):
                 torch.mean(torch.stack(kls, dim=0)),
                 action_dists,
                 torch.mean(torch.stack(critic_losses, dim=0)))
-
-    def critic_loss(self, episodes, old_values=None):
-        losses, values = [], []
-        if old_values is None:
-            old_values = [None] * len(episodes)
-
-        for (train_episodes, valid_episodes), old_pi in zip(episodes, old_values):
-            critic_params = self.adapt(train_episodes)[1]
-            with torch.set_grad_enabled(old_pi is None):
-                values = self.critic(valid_episodes.observations, params=critic_params)
-                advantages = valid_episodes.gae(values, tau=self.tau)
-                advantages = weighted_normalize(advantages,
-                                                weights=valid_episodes.mask)
-                losses.append(advantages.pow(2).mean())
-
-        return torch.mean(torch.stack(losses, dim=0)), values
 
     def step(self, episodes, max_kl=1e-3, cg_iters=10, cg_damping=1e-2,
              ls_max_steps=10, ls_backtrack_ratio=0.5):
