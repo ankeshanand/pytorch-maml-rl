@@ -56,6 +56,7 @@ def main(args):
 
     metalearner = ActorCriticMetaLearner(sampler, policy, critic, gamma=args.gamma,
         fast_lr=args.fast_lr, tau=args.tau, device=args.device, critic_lr=args.critic_lr)
+    wandb.watch(metalearner.critic)
 
     for batch in range(args.num_batches):
         tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
