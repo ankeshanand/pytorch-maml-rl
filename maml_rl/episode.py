@@ -91,21 +91,6 @@ class BatchEpisodes(object):
 
         return advantages
 
-    def gae_returns(self, values, tau=1.0):
-        # Add an additional 0 at the end of values for
-        # the estimation at the end of the episode
-        values = values.squeeze(2).detach()
-        values = F.pad(values * self.mask, (0, 0, 0, 1))
-
-        deltas = self.rewards + self.gamma * values[1:] - values[:-1]
-        returns = torch.zeros_like(deltas).float()
-        gae = torch.zeros_like(deltas[0]).float()
-        for i in range(len(self) - 1, -1, -1):
-            gae = gae * self.gamma * tau + deltas[i]
-            returns[i] = gae + values[i]
-
-        return returns
-
     def append(self, observations, actions, rewards, batch_ids):
         for observation, action, reward, batch_id in zip(
                 observations, actions, rewards, batch_ids):
