@@ -31,11 +31,11 @@ class ActorCriticMetaLearner(object):
     """
 
     def __init__(self, sampler, policy, critic, gamma=0.95,
-                 fast_lr=0.5, tau=1.0, device='cpu'):
+                 fast_lr=0.5, critic_lr=1e-3, tau=1.0, device='cpu'):
         self.sampler = sampler
         self.policy = policy
         self.critic = critic
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-3)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=critic_lr)
         self.gamma = gamma
         self.fast_lr = fast_lr
         self.tau = tau
