@@ -62,8 +62,7 @@ class ActorCriticMetaLearner(object):
     def inner_critic_loss(self, episodes, params=None):
         values = self.critic(episodes.observations)
         advantages = episodes.gae(values, tau=self.tau)
-        advantages = weighted_normalize(advantages, weights=episodes.mask, epsilon=1e-5)
-        value_loss = advantages.pow(2).mean()
+        value_loss = weighted_mean(advantages.pow(2), dim=0, weights=episodes.mask)
         return value_loss
 
     def adapt(self, episodes, first_order=False):
@@ -152,10 +151,9 @@ class ActorCriticMetaLearner(object):
 
                 values = self.critic(valid_episodes.observations, params=critic_params)
                 advantages = valid_episodes.gae(values, tau=self.tau)
-                advantages = weighted_normalize(advantages,
-                                                weights=valid_episodes.mask, epsilon=1e-5)
-                value_loss = advantages.pow(2).mean()
+                value_loss = weighted_mean(advantages.pow(2), dim=0, weights=valid_episodes.mask)
                 critic_losses.append(value_loss)
+                advantages = weighted_normalize(advantages, weights=valid_episodes.mask, epsilon=1e-5)
 
                 log_ratio = (action_dist.log_prob(valid_episodes.actions)
                              - old_pi.log_prob(valid_episodes.actions))
