@@ -7,7 +7,7 @@ from maml_rl.policies.policy import weight_init
 
 
 class Critic(nn.Module):
-    def __init__(self, input_size, output_size, hidden_sizes=(), nonlinearity=F.relu):
+    def __init__(self, input_size, output_size, hidden_sizes=(), nonlinearity=F.tanh):
         super().__init__()
         self.input_size = input_size
         self.output_size = output_size
@@ -19,7 +19,6 @@ class Critic(nn.Module):
         for i in range(1, self.num_layers + 1):
             self.add_module('layer{0}'.format(i),
                             nn.Linear(layer_sizes[i - 1], layer_sizes[i]))
-        self.apply(weight_init)
 
     def update_params(self, loss, step_size=0.5, first_order=False):
         """Apply one step of gradient descent on the loss function `loss`, with
