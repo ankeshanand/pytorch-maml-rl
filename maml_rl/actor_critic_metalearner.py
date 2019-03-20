@@ -47,8 +47,8 @@ class ActorCriticMetaLearner(object):
         with Generalized Advantage Estimation (GAE, [3]).
         """
         values = self.critic(episodes.observations, params=critic_params)
-        advantages = episodes.gae(values, tau=self.tau)
-        advantages = weighted_normalize(advantages, weights=episodes.mask)
+        advantages = episodes.gae_returns(values, tau=self.tau) - values.squeeze(2)
+        advantages = weighted_normalize(advantages, weights=episodes.mask, epsilon=1e-5)
 
         pi = self.policy(episodes.observations, params=params)
         log_probs = pi.log_prob(episodes.actions)
@@ -61,8 +61,8 @@ class ActorCriticMetaLearner(object):
 
     def inner_critic_loss(self, episodes, params=None):
         values = self.critic(episodes.observations)
-        advantages = episodes.gae(values, tau=self.tau)
-        advantages = weighted_normalize(advantages, weights=episodes.mask)
+        advantages = episodes.gae_returns(values, tau=self.tau) - values().squeeze(2)
+        advantages = weighted_normalize(advantages, weights=episodes.mask, epsilon=1e-5)
         value_loss = advantages.pow(2).mean()
         return value_loss
 
@@ -151,10 +151,11 @@ class ActorCriticMetaLearner(object):
                     old_pi = detach_distribution(action_dist)
 
                 values = self.critic(valid_episodes.observations, params=critic_params)
-                advantages = valid_episodes.gae(values, tau=self.tau)
+                advantages = valid_episodes.gae_returns(values, tau=self.tau) - values.squeeze(2)
                 advantages = weighted_normalize(advantages,
-                                                weights=valid_episodes.mask)
-                critic_losses.append(advantages)
+                                                weights=valid_episodes.mask, epsilon=1e-5)
+                value_loss = advantages.pow(2).mean()
+                critic_losses.append(value_loss)
 
                 log_ratio = (action_dist.log_prob(valid_episodes.actions)
                              - old_pi.log_prob(valid_episodes.actions))
