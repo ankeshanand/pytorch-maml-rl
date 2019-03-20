@@ -61,7 +61,7 @@ class ActorCriticMetaLearner(object):
 
     def inner_critic_loss(self, episodes, params=None):
         values = self.critic(episodes.observations)
-        advantages = episodes.gae_returns(values, tau=self.tau) - values().squeeze(2)
+        advantages = episodes.gae_returns(values, tau=self.tau) - values.squeeze(2)
         advantages = weighted_normalize(advantages, weights=episodes.mask, epsilon=1e-5)
         value_loss = advantages.pow(2).mean()
         return value_loss
