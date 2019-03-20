@@ -219,6 +219,8 @@ class ActorCriticMetaLearner(object):
         else:
             vector_to_parameters(old_params, self.policy.parameters())
 
+        return critic_loss
+
     def to(self, device, **kwargs):
         self.policy.to(device, **kwargs)
         self.critic.to(device, **kwargs)

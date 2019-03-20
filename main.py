@@ -61,7 +61,7 @@ def main(args):
     for batch in range(args.num_batches):
         tasks = sampler.sample_tasks(num_tasks=args.meta_batch_size)
         episodes = metalearner.sample(tasks, first_order=args.first_order)
-        metalearner.step(episodes, max_kl=args.max_kl, cg_iters=args.cg_iters,
+        meta_critic_loss = metalearner.step(episodes, max_kl=args.max_kl, cg_iters=args.cg_iters,
             cg_damping=args.cg_damping, ls_max_steps=args.ls_max_steps,
             ls_backtrack_ratio=args.ls_backtrack_ratio)
 
@@ -70,6 +70,7 @@ def main(args):
                           total_rewards([ep.rewards for ep, _ in episodes])}, step=batch)
         wandb.log({'total_rewards/after_update':
                        total_rewards([ep.rewards for _, ep in episodes])}, step=batch)
+        wandb.log({'meta critic loss': meta_critic_loss}, step=batch)
 
         # Save policy network
         with open(os.path.join(save_folder,
